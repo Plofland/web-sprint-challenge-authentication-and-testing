@@ -71,11 +71,41 @@ describe('server', () => {
       expect(res.body.message).toContain(`Welcome`);
     });
   });
+
+  describe('[GET] /', () => {
+    it('responds with a status of 200', async () => {
+      await request(server)
+        .post('/api/auth/register')
+        .send(paul);
+      let res = await request(server)
+        .post('/api/auth/login')
+        .send(paul);
+      const userToken = res.body.token;
+      res = await request(server)
+        .get('/api/jokes')
+        .set({ Authorization: userToken });
+      expect(res.status).toBe(200);
+    });
+    //⏬this test does not work when jokes are an empty array
+    it('responds with array of jokes,', async () => {
+      await request(server)
+        .post('/api/auth/register')
+        .send(paul);
+      let res = await request(server)
+        .post('/api/auth/login')
+        .send(paul);
+      const userToken = res.body.token;
+      res = await request(server)
+        .get('/api/jokes')
+        .set({ Authorization: userToken });
+      expect(res.text).toBeTruthy();
+    });
+    it('reponds with a status of 401 when token is invalid', async () => {
+      const userToken = 'invalidToken';
+      let res = await request(server)
+        .get('/api/jokes')
+        .set({ Authorization: userToken });
+      expect(res.status).toBe(401);
+    });
+  });
 });
-
-// describe('[GET] /', () => {
-//   it('responds with array of jokes', async () => {
-//     //register new user, then log in with them, then
-
-//   })
-// })
