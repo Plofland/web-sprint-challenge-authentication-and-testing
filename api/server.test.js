@@ -6,7 +6,7 @@ test('sanity', () => {
   expect(true).toBe(true);
 });
 
-const peter = { username: 'Peter', password: 'abc123' };
+const paul = { username: 'Paul', password: 'abc123' };
 
 //Create a set-up to handle migrations & destruction of test DB before and after each test
 beforeAll(async () => {
@@ -31,13 +31,41 @@ describe('server', () => {
   });
 
   describe('[POST] /register', () => {
-    it('register and respond with new user', async () => {
+    it('responds with a 201 status', async () => {
+      const res = await request(server)
+        .post('/api/auth/register')
+        .send(paul);
+      expect(res.status).toBe(201);
+    });
+    it('register and respond with new user object', async () => {
       let res;
 
       res = await request(server)
-        .post('/api/auth')
-        .send(peter);
-      expect(res).toBe({});
+        .post('/api/auth/register')
+        .send(paul);
+      expect(res.body).toMatchObject({
+        id: 1,
+        username: 'Paul'
+      });
     });
   });
+
+  // describe('[POST] /login', () => {
+  //   it('responds with a 200 status', async () => {
+  //     const res = await request(server)
+  //       .post('/api/auth')
+  //       .send(paul);
+  //     expect(res.status).toBe(200);
+  //   });
+  //   it('responds with welcome string', async () => {
+  //     //register new user then log in with them
+
+  // })
+
+  // describe('[GET] /', () => {
+  //   it('responds with array of jokes', async () => {
+  //     //register new user, then log in with them, then
+
+  //   })
+  // })
 });
