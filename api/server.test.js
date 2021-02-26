@@ -50,22 +50,32 @@ describe('server', () => {
     });
   });
 
-  // describe('[POST] /login', () => {
-  //   it('responds with a 200 status', async () => {
-  //     const res = await request(server)
-  //       .post('/api/auth')
-  //       .send(paul);
-  //     expect(res.status).toBe(200);
-  //   });
-  //   it('responds with welcome string', async () => {
-  //     //register new user then log in with them
-
-  // })
-
-  // describe('[GET] /', () => {
-  //   it('responds with array of jokes', async () => {
-  //     //register new user, then log in with them, then
-
-  //   })
-  // })
+  describe('[POST] /login', () => {
+    it('responds with a 200 status', async () => {
+      await request(server)
+        .post('/api/auth/register')
+        .send(paul);
+      const res = await request(server)
+        .post('/api/auth/login')
+        .send(paul);
+      expect(res.status).toBe(200);
+    });
+    it('responds with welcome string', async () => {
+      //register new user then log in with them
+      await request(server)
+        .post('/api/auth/register')
+        .send(paul);
+      const res = await request(server)
+        .post('/api/auth/login')
+        .send(paul);
+      expect(res.body.message).toContain(`Welcome`);
+    });
+  });
 });
+
+// describe('[GET] /', () => {
+//   it('responds with array of jokes', async () => {
+//     //register new user, then log in with them, then
+
+//   })
+// })
