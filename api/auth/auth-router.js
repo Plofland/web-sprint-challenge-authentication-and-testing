@@ -1,7 +1,40 @@
 const router = require('express').Router();
+const bcryptjs = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { jwtSecret } = require('../../config/secrets');
+const Users = require('./auth-model');
+
+const isValid = (user) => {
+  return Boolean(
+    user.username &&
+      user.password &&
+      typeof user.password === 'string'
+  );
+};
 
 router.post('/register', (req, res) => {
-  res.end('implement register, please!');
+  const credentials = req.body;
+  if (isValid) {
+    const rounds = process.env.BCRYPT_ROUNDS || 10;
+
+    const hash = bcryptjs.hashSync(
+      credentials.password,
+      rounds
+    );
+    credentials.password = hash;
+
+    Users.add(credentials)
+      .then((user) => {
+        res.status(201).json(user);
+      })
+      .catch((err) => {
+        res.status(500).json({ message: err.message });
+      });
+  } else {
+    res.status(400).json({
+      message: 'username and password required'
+    });
+  }
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
@@ -29,7 +62,34 @@ router.post('/register', (req, res) => {
 });
 
 router.post('/login', (req, res) => {
-  res.end('implement login, please!');
+  const { username, password } = req.body;
+
+  if (isValid(req.body)) {
+    Users.findBy({ username: username })
+      .then(([user]) => {
+        if (
+          user &&
+          bcryptjs.compareSync(password, user.password)
+        ) {
+          const token = generateToken(user);
+          res.status(200).json({
+            message: `Welcome, ${user.username}`,
+            token
+          });
+        } else {
+          res
+            .status(401)
+            .json({ message: 'Invalid credentials' });
+        }
+      })
+      .catch((err) => {
+        res.status(500).json({ message: err.message });
+      });
+  } else {
+    res.status(400).json({
+      message: 'username and password required'
+    });
+  }
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
@@ -54,5 +114,16 @@ router.post('/login', (req, res) => {
       the response body should include a string exactly as follows: "invalid credentials".
   */
 });
+
+const generateToken = (user) => {
+  const payload = {
+    subject: user.id,
+    username: user.username
+  };
+  const options = {
+    expiresIn: '3h'
+  };
+  return jwt.sign(payload, jwtSecret, options);
+};
 
 module.exports = router;
