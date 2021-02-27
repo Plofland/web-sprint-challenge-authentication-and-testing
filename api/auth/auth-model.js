@@ -7,7 +7,7 @@ const add = async (user) => {
 
 const findById = (id) => {
   return db('users as u')
-    .select('u.id', 'u.username')
+    .select('u.id', 'u.username', 'u.password')
     .where('u.id', id)
     .first();
 };

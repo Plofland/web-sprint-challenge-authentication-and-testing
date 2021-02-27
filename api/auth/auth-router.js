@@ -3,39 +3,29 @@ const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { jwtSecret } = require('../../config/secrets');
 const Users = require('./auth-model');
+const {
+  checkPayload,
+  checkUserInDb,
+  checkUserExists
+} = require('../middleware/middleware');
 
-const isValid = (user) => {
-  return Boolean(
-    user.username &&
-      user.password &&
-      typeof user.password === 'string'
-  );
-};
 
-router.post('/register', (req, res) => {
-  const credentials = req.body;
-  if (isValid) {
-    const rounds = process.env.BCRYPT_ROUNDS || 10;
-
-    const hash = bcryptjs.hashSync(
-      credentials.password,
-      rounds
-    );
-    credentials.password = hash;
-
-    Users.add(credentials)
-      .then((user) => {
-        res.status(201).json(user);
-      })
-      .catch((err) => {
-        res.status(500).json({ message: err.message });
+router.post(
+  '/register',
+  checkPayload,
+  checkUserInDb,
+  async (req, res) => {
+    try {
+      const hash = bcryptjs.hashSync(req.body.password, 10);
+      const newUser = await Users.add({
+        username: req.body.username,
+        password: hash
       });
-  } else {
-    res.status(400).json({
-      message: 'username and password required'
-    });
-  }
-  /*
+      res.status(201).json(newUser);
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+    /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
 
@@ -59,38 +49,34 @@ router.post('/register', (req, res) => {
     4- On FAILED registration due to the `username` being taken,
       the response body should include a string exactly as follows: "username taken".
   */
-});
+  }
+);
 
-router.post('/login', (req, res) => {
+router.post('/login', checkUserExists, (req, res) => {
   const { username, password } = req.body;
 
-  if (isValid(req.body)) {
-    Users.findBy({ username: username })
-      .then(([user]) => {
-        if (
-          user &&
-          bcryptjs.compareSync(password, user.password)
-        ) {
-          const token = generateToken(user);
-          res.status(200).json({
-            message: `Welcome, ${user.username}`,
-            token
-          });
-        } else {
-          res
-            .status(401)
-            .json({ message: 'Invalid credentials' });
-        }
-      })
-      .catch((err) => {
-        res.status(500).json({ message: err.message });
-      });
-  } else {
-    res.status(400).json({
-      message: 'username and password required'
+  Users.findBy({ username: username })
+    .then(([user]) => {
+      if (
+        user &&
+        bcryptjs.compareSync(password, user.password)
+      ) {
+        const token = generateToken(user);
+        res.status(200).json({
+          message: `Welcome, ${user.username}`,
+          token
+        });
+      } else {
+        res
+          .status(401)
+          .json({ message: 'Invalid credentials' });
+      }
+    })
+    .catch((err) => {
+      res.status(500).json({ message: err.message });
     });
-  }
-  /*
+});
+/*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
 
@@ -113,7 +99,7 @@ router.post('/login', (req, res) => {
     4- On FAILED login due to `username` not existing in the db, or `password` being incorrect,
       the response body should include a string exactly as follows: "invalid credentials".
   */
-});
+
 
 const generateToken = (user) => {
   const payload = {

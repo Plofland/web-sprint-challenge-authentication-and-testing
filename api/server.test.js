@@ -8,7 +8,7 @@ test('sanity', () => {
 
 const paul = { username: 'Paul', password: 'abc123' };
 
-//Create a set-up to handle migrations & destruction of test DB before and after each test
+//Set-up to handle migrations & destruction of test DB before and after each test
 beforeAll(async () => {
   await db.migrate.rollback();
   await db.migrate.latest();
@@ -61,7 +61,6 @@ describe('server', () => {
       expect(res.status).toBe(200);
     });
     it('responds with welcome string', async () => {
-      //register new user then log in with them
       await request(server)
         .post('/api/auth/register')
         .send(paul);
