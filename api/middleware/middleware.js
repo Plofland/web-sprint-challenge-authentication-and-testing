@@ -37,7 +37,7 @@ const checkUserExists = async (req, res, next) => {
         .json('invalid credentials');
     }
   } catch (error) {
-    res.status(500).json(`Server error: ${err}`);
+    res.status(500).json('username and password required');
   }
 };
 

@@ -72,8 +72,8 @@ router.post('/login', checkUserExists, (req, res) => {
           .json({ message: 'Invalid credentials' });
       }
     })
-    .catch((err) => {
-      res.status(500).json({ message: err.message });
+    .catch(() => {
+      res.status(500).json('username and password required');
     });
 });
 /*

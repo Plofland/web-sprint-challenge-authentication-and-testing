@@ -9,6 +9,9 @@ const restrict = (req, res, next) => {
   } else {
     jwt.verify(token, jwtSecret, (err, decoded) => {
       if (err) {
+        if (!token) {
+          res.status(500).json('no token');
+        }
         res.status(401).json('token invalid');
       } else {
         //this is how we will have access to the token info
